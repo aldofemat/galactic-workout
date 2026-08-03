@@ -1,0 +1,42 @@
+name: workout_app
+description: App de workout con corrección de postura por cámara.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Cámara en vivo
+  camera: ^0.11.0
+
+  # Detección de pose (esqueleto/keypoints) on-device
+  google_mlkit_pose_detection: ^0.14.0
+
+  cupertino_icons: ^1.0.6
+  supabase_flutter: ^2.15.4
+
+  # Beeps de las cuentas regresivas durante la ejecución
+  audioplayers: ^6.1.0
+  video_player: ^2.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/audio/
+
+# Genera el ícono de la app (todos los tamaños de Android) a partir de
+# assets/icon/icon.png. Correr con: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
