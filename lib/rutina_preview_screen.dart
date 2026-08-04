@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'ejecucion/ejecucion_rutina_screen.dart';
+import 'ejecucion/modelos_ejecucion.dart';
 import 'main.dart';
 import 'theme.dart';
 
