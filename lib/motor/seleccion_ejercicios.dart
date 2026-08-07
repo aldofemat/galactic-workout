@@ -71,11 +71,7 @@ List<Ejercicio> filtrarElegibles(
 /// descanso) se acerque a duracion_min; se acota al rango que permiten
 /// los bloques (7-13). No tiene que ser exacto.
 int numeroEjerciciosSesion(NivelConfig cfg) {
-  final resultado =
-      cfg.ejerciciosPorRonda.round().clamp(totalMinSesion, totalMaxSesion);
-  debugPrint(
-      '📊 numeroEjerciciosSesion: ejerciciosPorRonda=${cfg.ejerciciosPorRonda}, resultado=$resultado (min=$totalMinSesion, max=$totalMaxSesion)');
-  return resultado;
+  return cfg.ejerciciosPorRonda.round(); // Sin clamp
 }
 
 /// ---------------------------------------------------------------
@@ -93,6 +89,8 @@ int numeroEjerciciosSesion(NivelConfig cfg) {
 ///   están etiquetados con bloque=activación, no bloque=fuerza — ahí
 ///   es donde vive ese ~45%/50% de "contenido cardio/movilidad".
 Map<String, int> distribuirBloques(int n, TipoDia tipoDia, NivelConfig cfg) {
+  debugPrint(
+      '🎯 distribuirBloques recibió n=$n, ejerciciosPorRonda=${cfg.ejerciciosPorRonda}');
   final habilidad = tipoDia == TipoDia.movilidad ? 2 : 1;
   const cierre = _maxCierre;
 
@@ -109,7 +107,16 @@ Map<String, int> distribuirBloques(int n, TipoDia tipoDia, NivelConfig cfg) {
   };
 
   final fuerza = (resto * fraccionFuerza).round().clamp(_minFuerza, _maxFuerza);
-  final activacion = (resto - fuerza).clamp(_minActivacion, _maxActivacion);
+  var activacion = (resto - fuerza).clamp(_minActivacion, _maxActivacion);
+
+// Si quedó corto, agrega al bloque más flexible (activación)
+  final sumaFuerzaAct = fuerza + activacion;
+  if (sumaFuerzaAct < resto) {
+    activacion += (resto - sumaFuerzaAct);
+  }
+  final total = activacion + fuerza + core + habilidad + cierre;
+  debugPrint(
+      '   $tipoDia: act=$activacion, fza=$fuerza, core=$core, hab=$habilidad, cie=$cierre → TOTAL=$total');
 
   return {
     'activación': activacion,
