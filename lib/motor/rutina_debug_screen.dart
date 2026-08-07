@@ -32,11 +32,13 @@ class _RutinaDiaDetalle {
     required this.diaNumero,
     required this.tipoDia,
     required this.ejercicios,
+    this.duracionCalculada,
   });
 
   final int diaNumero;
   final String tipoDia;
   final List<_EjercicioDetalle> ejercicios;
+  final double? duracionCalculada;
 }
 
 const _etiquetaTipoDia = {
@@ -48,6 +50,8 @@ const _etiquetaTipoDia = {
 /// Vuelve a leer de Supabase la semana ya guardada (rutina_dias +
 /// rutina_dia_ejercicios, con el nombre del ejercicio embebido vía la
 /// FK ejercicio_id -> ejercicios) para mostrarla en pantalla.
+///
+/// ✅ TAMBIÉN TRAE y VERIFICA la duración_calculada_min
 Future<List<_RutinaDiaDetalle>> _obtenerDetalleSemana(String semanaId) async {
   final dias = await supabase
       .from('rutina_dias')
@@ -58,6 +62,7 @@ Future<List<_RutinaDiaDetalle>> _obtenerDetalleSemana(String semanaId) async {
   final resultado = <_RutinaDiaDetalle>[];
   for (final diaMap in dias as List) {
     final diaId = diaMap['id'] as String;
+    final duracionCalculada = diaMap['duracion_calculada_min'] as double?;
 
     final filas = await supabase
         .from('rutina_dia_ejercicios')
@@ -85,8 +90,17 @@ Future<List<_RutinaDiaDetalle>> _obtenerDetalleSemana(String semanaId) async {
         diaNumero: diaMap['dia_numero'] as int,
         tipoDia: diaMap['tipo_dia'] as String,
         ejercicios: ejercicios,
+        duracionCalculada: duracionCalculada,
       ),
     );
+
+    // ✅ VERIFICACIÓN EN CONSOLA (puedes ver en Flutter DevTools)
+    if (duracionCalculada != null) {
+      print(
+          '✓ Día ${diaMap['dia_numero']}: ${duracionCalculada.toStringAsFixed(1)} minutos');
+    } else {
+      print('⚠️ Día ${diaMap['dia_numero']}: Sin duración calculada');
+    }
   }
   return resultado;
 }
@@ -208,14 +222,60 @@ class _RutinaDebugScreenState extends State<RutinaDebugScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Día ${dia.diaNumero} — '
-                        '${_etiquetaTipoDia[dia.tipoDia] ?? dia.tipoDia}',
-                        style: const TextStyle(
-                          color: Colors.deepOrangeAccent,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Día ${dia.diaNumero} — '
+                            '${_etiquetaTipoDia[dia.tipoDia] ?? dia.tipoDia}',
+                            style: const TextStyle(
+                              color: Colors.deepOrangeAccent,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // ✅ Mostrar duración calculada aquí
+                          if (dia.duracionCalculada != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.3),
+                                border: Border.all(color: Colors.greenAccent),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '⏱️ ${dia.duracionCalculada!.toStringAsFixed(1)} min',
+                                style: const TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.3),
+                                border: Border.all(color: Colors.redAccent),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '⚠️ Sin duración',
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const Divider(color: Colors.white24),
                       if (dia.ejercicios.isEmpty)

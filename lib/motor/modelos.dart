@@ -68,7 +68,7 @@ class Ejercicio {
 }
 
 /// Fila de la tabla `nivel_config`: parámetros de trabajo/descanso/
-/// rondas/duración para un nivel (0-4).
+/// rondas/duración/ejercicios para un nivel (0-4).
 class NivelConfig {
   const NivelConfig({
     required this.nivel,
@@ -76,7 +76,7 @@ class NivelConfig {
     required this.trabajoReps,
     required this.descansoSeg,
     required this.rondas,
-    required this.duracionMin,
+    required this.ejerciciosPorRonda,
   });
 
   final int nivel;
@@ -84,7 +84,7 @@ class NivelConfig {
   final int trabajoReps;
   final int descansoSeg;
   final int rondas;
-  final int duracionMin;
+  final int ejerciciosPorRonda;
 
   factory NivelConfig.fromMap(Map<String, dynamic> map) {
     return NivelConfig(
@@ -93,7 +93,7 @@ class NivelConfig {
       trabajoReps: map['trabajo_reps'] as int,
       descansoSeg: map['descanso_seg'] as int,
       rondas: map['rondas'] as int,
-      duracionMin: map['duracion_min'] as int,
+      ejerciciosPorRonda: map['ejercicios_por_ronda'] as int,
     );
   }
 }

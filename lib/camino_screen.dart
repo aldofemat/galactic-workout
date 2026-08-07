@@ -6,7 +6,6 @@
 library;
 
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'motor/generador_rutina.dart';
@@ -177,11 +176,14 @@ class _CaminoScreenState extends State<CaminoScreen> {
     for (final semana in semanas) {
       final esSemanaActiva = semana['id'] == semanaActivaId;
 
+      final semanaId = semana['id'] as String;
+      debugPrint('📍 Cargando días para semana: $semanaId');
       final dias = await supabase
           .from('rutina_dias')
           .select()
-          .eq('semana_id', semana['id'] as String)
+          .eq('semana_id', semanaId)
           .order('dia_numero', ascending: true);
+      debugPrint('📊 Días obtenidos: ${dias.length} | Contenido: $dias');
 
       var yaHayPendienteEnEstaSemana = false;
       for (final dia in dias as List) {
@@ -205,7 +207,10 @@ class _CaminoScreenState extends State<CaminoScreen> {
         );
       }
     }
-
+    debugPrint('🎯 TOTAL nodos creados: ${nodos.length}');
+    for (var i = 0; i < nodos.length; i++) {
+      debugPrint('   Nodo $i: ${nodos[i].tipoDia} - ${nodos[i].estado}');
+    }
     // Si la semana activa no tiene ningún día pendiente, ya está
     // completada (invariante ya garantizado en otras pantallas): se
     // genera una semana nueva y se agrega al final del camino.
@@ -362,6 +367,8 @@ class _CaminoScreenState extends State<CaminoScreen> {
                   final altura = data.nodos.isEmpty
                       ? constraints.maxHeight
                       : _espacioVertical * data.nodos.length;
+                  debugPrint(
+                      '📏 Renderizando: nodos=${data.nodos.length}, altura calculada=$altura, maxWidth=${constraints.maxWidth}');
 
                   final centros = [
                     for (var i = 0; i < data.nodos.length; i++)
@@ -370,7 +377,8 @@ class _CaminoScreenState extends State<CaminoScreen> {
                         _espacioVertical * i + _espacioVertical / 2,
                       ),
                   ];
-
+                  debugPrint(
+                      '📋 Creando ${data.nodos.length} nodos widgets...');
                   return SingleChildScrollView(
                     controller: _scrollController,
                     child: SizedBox(
@@ -417,6 +425,7 @@ class _CaminoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    debugPrint('🎨 Pintando camino: ${centros.length} centros, size=$size');
     for (var i = 1; i < centros.length; i++) {
       final p1 = centros[i - 1];
       final p2 = centros[i];

@@ -5,13 +5,43 @@
 library;
 
 import 'dart:math';
-
 import '../main.dart';
 import 'calendario_semanal.dart';
 import 'modelos.dart';
 import 'nivel_calculator.dart';
 import 'seleccion_ejercicios.dart';
 import 'zonas_lesion.dart';
+import '../constants.dart'; // ← Importa la constante
+
+double calcularDuracionSesion(
+  List<EjercicioAsignado> sesion,
+  NivelConfig cfg,
+) {
+  // Contar por tipo
+  int ejerciciosTiempo = 0;
+  int ejerciciosReps = 0;
+
+  for (final asignado in sesion) {
+    if (asignado.ejercicio.modalidad == 'tiempo') {
+      ejerciciosTiempo++;
+    } else if (asignado.ejercicio.modalidad == 'reps') {
+      // ← Explícito
+      ejerciciosReps++;
+    }
+  }
+
+  // Convertir a segundos
+  final tiempoTrabajoTiempo = ejerciciosTiempo * cfg.trabajoSeg;
+  final tiempoTrabajoReps = (ejerciciosReps *
+      cfg.trabajoReps *
+      WorkoutConstants.segundosPorRep); // ← Usa constante
+  final tiempoDescansoTotal =
+      (ejerciciosTiempo + ejerciciosReps) * cfg.descansoSeg;
+
+  final totalSegundos =
+      tiempoTrabajoTiempo + tiempoTrabajoReps + tiempoDescansoTotal;
+  return totalSegundos / 60;
+}
 
 /// Genera la semana de rutinas del usuario [userId] a partir de su
 /// perfil y la guarda en Supabase. Desactiva cualquier semana anterior
@@ -94,12 +124,16 @@ Future<String> generarRutinaSemanal(String userId) async {
 
   for (var i = 0; i < calendario.length; i++) {
     final tipoDia = calendario[i];
+    final duracion =
+        calcularDuracionSesion(sesiones[i], cfg); // ← AGREGA ESTA LÍNEA
+
     final diaInsertado = await supabase
         .from('rutina_dias')
         .insert({
           'semana_id': semanaId,
           'dia_numero': i + 1,
           'tipo_dia': tipoDia.valor,
+          'duracion_calculada_min': duracion, // ← AGREGA ESTE CAMPO
         })
         .select()
         .single();

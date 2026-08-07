@@ -242,6 +242,21 @@ class _ProgresoScreenState extends State<ProgresoScreen> {
                     nivel: data.nivelResultado,
                     mensajeFaltante: data.mensajeFaltante,
                   ),
+                  const SizedBox(height: 32),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await supabase.auth.signOut();
+                    },
+                    icon: const Icon(Icons.logout, color: Colors.redAccent),
+                    label: const Text(
+                      'Cerrar sesión',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.redAccent),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),

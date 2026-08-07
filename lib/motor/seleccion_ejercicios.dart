@@ -8,6 +8,7 @@ import 'dart:math';
 
 import 'calendario_semanal.dart';
 import 'modelos.dart';
+import 'package:flutter/foundation.dart';
 
 /// Orden fijo de bloques dentro de TODA sesión, sin excepción.
 const ordenBloques = ['activación', 'fuerza', 'core', 'habilidad', 'cierre'];
@@ -70,11 +71,11 @@ List<Ejercicio> filtrarElegibles(
 /// descanso) se acerque a duracion_min; se acota al rango que permiten
 /// los bloques (7-13). No tiene que ser exacto.
 int numeroEjerciciosSesion(NivelConfig cfg) {
-  final slotSeg = cfg.trabajoSeg + cfg.descansoSeg;
-  if (slotSeg <= 0 || cfg.rondas <= 0) return totalMinSesion;
-  final totalSeg = cfg.duracionMin * 60;
-  final n = (totalSeg / (cfg.rondas * slotSeg)).round();
-  return n.clamp(totalMinSesion, totalMaxSesion);
+  final resultado =
+      cfg.ejerciciosPorRonda.round().clamp(totalMinSesion, totalMaxSesion);
+  debugPrint(
+      '📊 numeroEjerciciosSesion: ejerciciosPorRonda=${cfg.ejerciciosPorRonda}, resultado=$resultado (min=$totalMinSesion, max=$totalMaxSesion)');
+  return resultado;
 }
 
 /// ---------------------------------------------------------------
@@ -93,7 +94,7 @@ int numeroEjerciciosSesion(NivelConfig cfg) {
 ///   es donde vive ese ~45%/50% de "contenido cardio/movilidad".
 Map<String, int> distribuirBloques(int n, TipoDia tipoDia, NivelConfig cfg) {
   final habilidad = tipoDia == TipoDia.movilidad ? 2 : 1;
-  final cierre = cfg.duracionMin >= 30 ? _maxCierre : _minCierre;
+  const cierre = _maxCierre;
 
   final core = (n * 0.30).round().clamp(_minCore, _maxCore);
 
@@ -266,10 +267,14 @@ List<Ejercicio> elegirParaBloque({
 ///
 /// tiempo -> trabajo_seg; reps -> trabajo_reps; ambas -> trabajo_reps
 /// (se prefieren reps porque la cámara cuenta repeticiones).
+// ✅ Así ya está bien (pero hazlo explícito):
 ({String tipo, int valor}) calcularDosis(Ejercicio ejercicio, NivelConfig cfg) {
   if (ejercicio.modalidad == 'tiempo') {
     return (tipo: 'tiempo', valor: cfg.trabajoSeg);
+  } else if (ejercicio.modalidad == 'reps') {
+    return (tipo: 'reps', valor: cfg.trabajoReps);
   }
+  // Fallback (no debería llegar aquí)
   return (tipo: 'reps', valor: cfg.trabajoReps);
 }
 

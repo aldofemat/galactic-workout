@@ -9,6 +9,7 @@ import 'ejecucion/ejecucion_rutina_screen.dart';
 import 'ejecucion/modelos_ejecucion.dart';
 import 'main.dart';
 import 'theme.dart';
+import 'motor/utils.dart';
 
 /// Ejercicios unilaterales llegan como 2 filas (lado izquierdo/derecho)
 /// con el mismo ejercicio_id: el nombre a mostrar/ejecutar es el del
@@ -41,7 +42,8 @@ class _DiaPreview {
   const _DiaPreview({
     required this.diaId,
     required this.tipoDia,
-    required this.duracionMin,
+    required this.duracionCalculadaMin,
+    required this.duracionMinRedondeada,
     required this.rondas,
     required this.descansoSeg,
     required this.ejercicios,
@@ -49,7 +51,8 @@ class _DiaPreview {
 
   final String diaId;
   final String tipoDia;
-  final int duracionMin;
+  final double duracionCalculadaMin; // ← Ahora es double (sin redondear)
+  final int duracionMinRedondeada; // ← Este es el redondeado para mostrar
   final int rondas;
   final int descansoSeg;
   final List<_EjercicioPreview> ejercicios;
@@ -90,22 +93,33 @@ class _RutinaPreviewScreenState extends State<RutinaPreviewScreen> {
   }
 
   Future<_DiaPreview> _cargarPreview() async {
+    // Paso 1: cargar día
     final dia = await supabase
         .from('rutina_dias')
         .select()
         .eq('id', widget.diaId)
         .single();
+
+    // Paso 2: cargar semana (usando el día)
     final semana = await supabase
         .from('rutinas_semana')
         .select()
         .eq('id', dia['semana_id'] as String)
         .single();
+
+    // Paso 3: cargar config (usando la semana)
     final cfg = await supabase
         .from('nivel_config')
         .select()
         .eq('nivel', semana['nivel_usuario'] as int)
         .single();
 
+    // Paso 4: calcular duraciones
+    final duracionPorRonda = dia['duracion_calculada_min'] as double? ?? 0.0;
+    final rondas = cfg['rondas'] as int;
+    final duracionTotal = duracionPorRonda * rondas;
+
+    // Paso 5: cargar ejercicios
     final ejerciciosData = await supabase
         .from('rutina_dia_ejercicios')
         .select(
@@ -133,8 +147,9 @@ class _RutinaPreviewScreenState extends State<RutinaPreviewScreen> {
     return _DiaPreview(
       diaId: widget.diaId,
       tipoDia: dia['tipo_dia'] as String,
-      duracionMin: cfg['duracion_min'] as int,
-      rondas: cfg['rondas'] as int,
+      duracionCalculadaMin: duracionTotal,
+      duracionMinRedondeada: redondearA5Minutos(duracionTotal),
+      rondas: rondas,
       descansoSeg: cfg['descanso_seg'] as int,
       ejercicios: ejercicios,
     );
@@ -212,7 +227,7 @@ class _RutinaPreviewScreenState extends State<RutinaPreviewScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${dia.duracionMin} min',
+                    '${dia.duracionMinRedondeada} min',
                     style: const TextStyle(color: Colors.white54, fontSize: 14),
                   ),
                   const SizedBox(width: 14),
@@ -315,9 +330,7 @@ class _MediaPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (mediaUrl != null && mediaUrl!.isNotEmpty) {
-      // TODO: mostrar la imagen/miniatura real de mediaUrl aquí.
-    }
+    if (mediaUrl != null && mediaUrl!.isNotEmpty) {}
     return Container(
       width: 52,
       height: 52,

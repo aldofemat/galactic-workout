@@ -76,7 +76,6 @@ NivelConfig _cfg(int nivel) {
     trabajoReps: f.trabajoReps,
     descansoSeg: f.descansoSeg,
     rondas: f.rondas,
-    duracionMin: f.duracionMin,
   );
 }
 
